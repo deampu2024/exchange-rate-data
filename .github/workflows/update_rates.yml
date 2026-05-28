@@ -1,26 +1,32 @@
 name: Update Exchange Rates
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天凌晨0点运行
-  workflow_dispatch: # 支持手动点击运行
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
+    # 🌟 关键：给 GitHub Actions 赋予写入代码仓库的权限
+    permissions:
+      contents: write
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        # 🌟 更新到 v4 版本，解决 Node.js 警告
+        uses: actions/checkout@v4
 
       - name: Fetch Rates
         run: |
-          # 这里调用你的 API，使用 curl 获取数据
-          # 请将 YOUR_API_KEY 替换为你实际的 Key
-          curl "https://v6.exchangerate-api.com/v6/044d64ce452c51beb7262b6a/latest/CNY" > data/rates.json
+          # 确保 data 目录存在
+          mkdir -p data
+          # 请替换 YOUR_API_KEY
+          curl "https://v6.exchangerate-api.com/v6/044d64ce452c51beb7262b6a/latest/USD" > data/rates.json
 
       - name: Commit and Push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add data/rates.json
-          git commit -m "Update exchange rates"
-          git push
+          # 🌟 检查是否有变更，没有变更时不执行 commit，防止报错
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update exchange rates" && git push)
