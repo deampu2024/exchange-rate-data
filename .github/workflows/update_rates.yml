@@ -1,0 +1,26 @@
+name: Update Exchange Rates
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天凌晨0点运行
+  workflow_dispatch: # 支持手动点击运行
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch Rates
+        run: |
+          # 这里调用你的 API，使用 curl 获取数据
+          # 请将 YOUR_API_KEY 替换为你实际的 Key
+          curl "https://v6.exchangerate-api.com/v6/044d64ce452c51beb7262b6a/latest/CNY" > data/rates.json
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/rates.json
+          git commit -m "Update exchange rates"
+          git push
